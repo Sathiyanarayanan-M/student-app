@@ -6,6 +6,7 @@ import 'package:percent_indicator/percent_indicator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:student_app/admin/attendance/DbAndRefs.dart';
 
+// ignore: must_be_immutable
 class Dashboard extends StatefulWidget {
   List details = [];
   var days;
@@ -16,7 +17,7 @@ class Dashboard extends StatefulWidget {
 
 class _DashboardState extends State<Dashboard> {
   Future<SharedPreferences> _preference = SharedPreferences.getInstance();
-  final references = Firestore.instance;
+  final references = FirebaseFirestore.instance;
 
   List<Contents> workingdays = List();
   var presentdays;
@@ -27,13 +28,13 @@ class _DashboardState extends State<Dashboard> {
   getdays() async {
     var ref1 = references
         .collection('collage')
-        .document('attendance')
+        .doc('attendance')
         .collection(widget.details[8])
-        .document(widget.details[5])
+        .doc(widget.details[5])
         .collection(widget.details[11])
-        .document(widget.details[2]);
+        .doc(widget.details[2]);
     ref1.snapshots().listen((event) {
-      presentdays = event.data['total'];
+      presentdays = event.data()['total'];
       presentdays = presentdays.toDouble();
       percentage = presentdays / widget.days;
       displaypercent = percentage * 100;

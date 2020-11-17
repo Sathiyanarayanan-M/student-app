@@ -29,7 +29,7 @@ class _UploadProfile extends State<UploadProfile> {
 
   String profileUrl;
   final picker = ImagePicker();
-  final reference = Firestore.instance;
+  final reference = FirebaseFirestore.instance;
   String dep, yer;
   List<Contents> year = List();
   List<Contents> department = List();
@@ -44,16 +44,16 @@ class _UploadProfile extends State<UploadProfile> {
     CollectionReference depRef = obj.getDetailRef('department');
     yearRef.snapshots().listen((event) {
       setState(() {
-        for (int i = 0; i < event.documents.length; i++) {
-          year.add(Contents.fromSnapshot(event.documents[i]));
+        for (int i = 0; i < event.docs.length; i++) {
+          year.add(Contents.fromSnapshot(event.docs[i]));
         }
       });
     });
     depRef.snapshots().listen((event) {
       if (mounted) {
         setState(() {
-          for (int i = 0; i < event.documents.length; i++) {
-            department.add(Contents.fromSnapshot(event.documents[i]));
+          for (int i = 0; i < event.docs.length; i++) {
+            department.add(Contents.fromSnapshot(event.docs[i]));
           }
         });
       }
@@ -78,21 +78,21 @@ class _UploadProfile extends State<UploadProfile> {
   Future upload(BuildContext context) async {
     if (formKey.currentState.validate()) {
       try {
-        StorageReference firebaseStorageRef =
+        Reference firebaseStorageRef =
             FirebaseStorage.instance.ref().child('profile/$batch/$dept/$regNo');
-        StorageUploadTask uploadTask = firebaseStorageRef.putFile(_image);
-        StorageTaskSnapshot taskSnapshot = await uploadTask.onComplete;
+        UploadTask uploadTask = firebaseStorageRef.putFile(_image);
+        TaskSnapshot taskSnapshot = await uploadTask.whenComplete(() => null);
         var url = await taskSnapshot.ref.getDownloadURL();
         profileUrl = url.toString();
 
-        DocumentReference ref = Firestore.instance
+        DocumentReference ref = FirebaseFirestore.instance
             .collection('collage')
-            .document('student')
+            .doc('student')
             .collection('$dept')
-            .document('$batch')
+            .doc('$batch')
             .collection('$cls')
-            .document('$regNo');
-        ref.setData({
+            .doc('$regNo');
+        ref.set({
           'Name': '$name',
           'Rollno': '$rollNo',
           'Regno': '$regNo',
@@ -388,8 +388,8 @@ class _UploadProfile extends State<UploadProfile> {
     reference.snapshots().listen((event) {
       classes.clear();
       setState(() {
-        for (int i = 0; i < event.documents.length; i++) {
-          classes.add(Contents.fromSnapshot(event.documents[i]));
+        for (int i = 0; i < event.docs.length; i++) {
+          classes.add(Contents.fromSnapshot(event.docs[i]));
         }
       });
     });

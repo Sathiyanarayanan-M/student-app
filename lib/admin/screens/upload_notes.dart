@@ -17,14 +17,14 @@ class UploadNotes extends StatefulWidget {
 }
 
 class UploadNotesState extends State<UploadNotes> {
-  final databaseReference = Firestore.instance;
+  final databaseReference = FirebaseFirestore.instance;
   String _path;
   Map<String, String> _paths;
   String _extension;
   FileType _pickType = FileType.any;
   bool _multiPick = false;
   GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey();
-  List<StorageUploadTask> _tasks = <StorageUploadTask>[];
+  List<UploadTask> _tasks = <UploadTask>[];
 
   void openFileExplorer() async {
     try {
@@ -63,12 +63,12 @@ class UploadNotesState extends State<UploadNotes> {
 
   upload(fileName, filePath) {
     _extension = fileName.toString().split('.').last;
-    StorageReference storageRef =
+    Reference storageRef =
         FirebaseStorage.instance.ref().child("notes/$fileName");
 
-    final StorageUploadTask uploadTask = storageRef.putFile(
+    final UploadTask uploadTask = storageRef.putFile(
       File(filePath),
-      StorageMetadata(
+      SettableMetadata(
         contentType: '$_pickType/$_extension',
       ),
     );
@@ -86,7 +86,7 @@ class UploadNotesState extends State<UploadNotes> {
   @override
   Widget build(BuildContext context) {
     final List<Widget> children = <Widget>[];
-    _tasks.forEach((StorageUploadTask task) {
+    _tasks.forEach((UploadTask task) {
       final Widget tile = UploadTaskListTile(
         task: task,
         onDismissed: () => setState(() => _tasks.remove(task)),
@@ -140,42 +140,42 @@ class UploadTaskListTile extends StatelessWidget {
   const UploadTaskListTile({Key key, this.task, this.onDismissed})
       : super(key: key);
 
-  final StorageUploadTask task;
+  final UploadTask task;
   final VoidCallback onDismissed;
 
-  String get status {
-    String result;
-    if (task.isComplete) {
-      if (task.isSuccessful) {
-        result = 'Complete';
-      } else if (task.isCanceled) {
-        result = 'Canceled';
-      } else {
-        result = 'Failed ERROR: ${task.lastSnapshot.error}';
-      }
-    } else if (task.isInProgress) {
-      result = 'Uploading';
-    } else if (task.isPaused) {
-      result = 'Paused';
-    }
-    return result;
-  }
+  // String get status {
+  //   String result;
+  //   if (task.isComplete) {
+  //     if (task.isSuccessful) {
+  //       result = 'Complete';
+  //     } else if (task.isCanceled) {
+  //       result = 'Canceled';
+  //     } else {
+  //       result = 'Failed ERROR: ${task.snapshot.error}';
+  //     }
+  //   } else if (task.isInProgress) {
+  //     result = 'Uploading';
+  //   } else if (task.isPaused) {
+  //     result = 'Paused';
+  //   }
+  //   return result;
+  // }
 
-  String _bytesTransferred(StorageTaskSnapshot snapshot) {
-    return '${snapshot.bytesTransferred}/${snapshot.totalByteCount}';
+  String _bytesTransferred(TaskSnapshot snapshot) {
+    return '${snapshot.bytesTransferred}/${snapshot.totalBytes}';
   }
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<StorageTaskEvent>(
-      stream: task.events,
-      builder: (BuildContext context,
-          AsyncSnapshot<StorageTaskEvent> asyncSnapshot) {
+    return StreamBuilder<TaskSnapshot>(
+      stream: task.snapshotEvents,
+      builder:
+          (BuildContext context, AsyncSnapshot<TaskSnapshot> asyncSnapshot) {
         Widget subtitle;
         if (asyncSnapshot.hasData) {
-          final StorageTaskEvent event = asyncSnapshot.data;
-          final StorageTaskSnapshot snapshot = event.snapshot;
-          subtitle = Text('$status: ${_bytesTransferred(snapshot)} bytes sent');
+          final TaskSnapshot event = asyncSnapshot.data;
+          final TaskSnapshot snapshot = event;
+          subtitle = Text(' ${_bytesTransferred(snapshot)} bytes sent');
         } else {
           subtitle = const Text('Starting...');
         }
@@ -185,32 +185,32 @@ class UploadTaskListTile extends StatelessWidget {
           child: ListTile(
             title: Text('Upload Task #${task.hashCode}'),
             subtitle: subtitle,
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: <Widget>[
-                Offstage(
-                  offstage: !task.isInProgress,
-                  child: IconButton(
-                    icon: const Icon(Icons.pause),
-                    onPressed: () => task.pause(),
-                  ),
-                ),
-                Offstage(
-                  offstage: !task.isPaused,
-                  child: IconButton(
-                    icon: const Icon(Icons.file_upload),
-                    onPressed: () => task.resume(),
-                  ),
-                ),
-                Offstage(
-                  offstage: task.isComplete,
-                  child: IconButton(
-                    icon: const Icon(Icons.cancel),
-                    onPressed: () => task.cancel(),
-                  ),
-                ),
-              ],
-            ),
+            // trailing: Row(
+            //   mainAxisSize: MainAxisSize.min,
+            //   children: <Widget>[
+            //     Offstage(
+            //       offstage: !task.isInProgress,
+            //       child: IconButton(
+            //         icon: const Icon(Icons.pause),
+            //         onPressed: () => task.pause(),
+            //       ),
+            //     ),
+            //     Offstage(
+            //       offstage: !task.isPaused,
+            //       child: IconButton(
+            //         icon: const Icon(Icons.file_upload),
+            //         onPressed: () => task.resume(),
+            //       ),
+            //     ),
+            //     Offstage(
+            //       offstage: task.isComplete,
+            //       child: IconButton(
+            //         icon: const Icon(Icons.cancel),
+            //         onPressed: () => task.cancel(),
+            //       ),
+            //     ),
+            //   ],
+            // ),
           ),
         );
       },

@@ -14,19 +14,19 @@ class _NotesState extends State<Notes> {
   String path;
 
   retrieveNotes() {
-    final StorageReference storageRef =
-        FirebaseStorage.instance.ref().child('notes');
+    final Reference storageRef = FirebaseStorage.instance.ref().child('notes');
     storageRef.listAll().then((result) {
-      if (mounted) {
-        setState(() {
-          _notesList = result['items'].keys.toList();
-        });
-      }
+      print(result);
+      // if (mounted) {
+      //   setState(() {
+      //     _notesList = result['items'].keys.toList();
+      //   });
+      // }
     });
   }
 
   openURL(String name) async {
-    StorageReference ref = FirebaseStorage.instance.ref().child("notes/$name");
+    Reference ref = FirebaseStorage.instance.ref().child("notes/$name");
     String furl = (await ref.getDownloadURL()).toString();
 
     _launchURL() async {
